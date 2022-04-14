@@ -1,64 +1,268 @@
+//////////////////////////////////////////////
+// Apogee Detection And Safe Dual-Deployment// 
+// Pyrotechnic Activation                   //
+//                                          //
+//      ENGINEERS:                          //
+//    Anton Kulinich (M.S. AE)              //
+//    Dan Sullivan (B.S. AE)                //
+//                                          //
+//      DATE:                               //
+//    4/13/2022                             //
+//                                          //
+//      DESCRIPTION:                        //
+//   The program is designed to detect the  //
+//   pressure and altitude using a BMP280.  //
+//   With the altitude detected upon        //
+//   program startup, the program will      //
+//   determine the minimum safe altitude    //
+//   at which the onboard pyrotechnics      //
+//   may fire. The pyrotechnics are to be   //
+//   fired when (a) apogee is detected      //
+//   within 1 meter, (b) the rocket is      //
+//   above the minimum safe distance, and   //
+//   (c)[main parachute only] when the      //
+//   rocket is between the minimum safe     //
+//   distance and 100 meters above the      //
+//   minimum safe distance.                 //
+//                                          //
+//       NOTES:                             //
+//    Further optimizations are needed.     //
+//    Current sketch uses:                  //
+//        PROGRAM STORAGE SPACE: 65%        //
+//        GLOBAL VARIABLES:      60%        //
+//                                          //
+//                                          //
+//////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////
+// Library Declaration                     //
+/////////////////////////////////////////////
+
+
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP280.h>
 #include <SPI.h>
 #include <SD.h>
-
 #include <Wire.h>
+
+
+
+/////////////////////////////////////////////
+// Sensor Declaration                      //
+/////////////////////////////////////////////
+
+
 
 Adafruit_BMP280 bmp;
 Adafruit_MPU6050 mpu;
 
+
+
+/////////////////////////////////////////////
+// Variable Declaration                    //
+/////////////////////////////////////////////
+
+
+
 int falling_count;
-float current_alt;
-float previous_alt;
-float local_pressure = 1023.00;
-unsigned status1;
+int current_alt;
+int previous_alt;                         /////////////////////////////////////
+//////////////////////////////////////////// ADJUST LOCAL PRESSURE LAUNCH DAY//
+int local_pressure = 1023.00;             /////////////////////////////////////
+int ref_alt;
+boolean firstRun = false;
+boolean secondRun = false;
+
+
+
+/////////////////////////////////////////////
+// Single-Run & setup                      //
+/////////////////////////////////////////////
+
+
 
 void setup() {
-  pinMode(4,OUTPUT);
+  unsigned status1;
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(10, OUTPUT);
+  poweronblink();
   Serial.begin(115200);
   // put your setup code here, to run once:
-  Serial.print("beginning apogee detection test");
+  Serial.print(F("beginning apogee detection test"));
   status1 = bmp.begin(0x76);
   if (!status1) {
     Serial.println(F("Could not find a valid BMP280 or MPU sensor"));
     while (1) delay(10);
   }
 
+
+
+/////////////////////////////////////////////
+// Activate BMP Oversampling               //
+/////////////////////////////////////////////
+
+
+
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                   Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_1); /* Standby time. */
+  int sum;
+  for (byte i = 0; i < 100; i++)
+  {
+    sum += current_alt;
+    current_alt = bmp.readAltitude(local_pressure);
+  }
+  sum = sum / 100;
+  ref_alt = sum;
 
   
+  
+/////////////////////////////////////////////
+// Determine safety altitude from current  //
+/////////////////////////////////////////////
+
+
+
+  int safedist = 500*(1/3.281);
+  int safealt = ref_alt + safedist;
+
+  Serial.println(F("\nReference Altitude Completed:"));
+  Serial.print(ref_alt);
+  Serial.println(F("\nSafety Altitude:"));
+  Serial.print(safealt);
 }
+
+/////////////////////////////////////////////
+// Repeated Functions placed here          //
+/////////////////////////////////////////////
 
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
   current_alt = bmp.readAltitude(local_pressure);
-  //Serial.println(current_alt);
+  // Serial.println(current_alt);
   apogeeCheck();
+  if (firstRun == false)
+  {
+    apogeeignition();
+  }
+  if (secondRun == false)
+  {
+    pyroignition();
+  }
   previous_alt = current_alt;
-  delay(500);
+  delay(100);
 }
 
 
-void apogeeCheck(){
-  if(current_alt < previous_alt){
+
+/////////////////////////////////////////////
+// Determining when rocket is at apogee    //
+/////////////////////////////////////////////
+
+
+
+void apogeeCheck() {
+  if (current_alt < previous_alt) {
     falling_count++;
     //Serial.print("lower altitude detected");
     //Serial.print("\n");
   } else {
     falling_count = 0;
-    Serial.println("altitude climbing...");
+    //   Serial.println("altitude climbing...");
   }
-  if(falling_count == 3){
-    Serial.println("appogee_reached");
-    digitalWrite(4,HIGH);
-    
+  if (falling_count == 1) {
+    Serial.println(F("appogee_reached"));
+dosh();
   }
+}
+
+//////////////////////////////////////////////////
+// Activate onboard LED to signal program start //
+//////////////////////////////////////////////////
+
+
+
+void poweronblink() {
+dosh();
+dosh();
+dosh();
+}
+
+
+
+/////////////////////////////////////////////
+// Apogee pyro                             //
+/////////////////////////////////////////////
+
+
+
+void apogeeignition() {
+  int safedist = 500*(1/3.281);
+  int safealt = ref_alt + safedist;
+
+  if (current_alt > safealt && falling_count >= 1) {
+    Serial.print(F("Apogee deployment alt:"));
+    Serial.print(current_alt);
+dash();
+dash();
+dash();
+    firstRun = true;
+
+  }
+}
+
+
+
+/////////////////////////////////////////////
+// Main Parachute Pyro                     //
+/////////////////////////////////////////////
+
+
+void pyroignition() {
+  int safedist = 500*(1/3.281);
+  int safealt = ref_alt + safedist;
+  
+  if (current_alt > safealt && falling_count >= 1 && safealt < 300) {
+    Serial.print(F("2nd deployment alt:"));
+    Serial.print(current_alt);
+dot();
+dot(); 
+dot();
+    secondRun = true;
+  }
+}
+
+
+/////////////////////////////////////////////
+// Reducing memory usage through functions //
+/////////////////////////////////////////////
+void dot()
+{
+  digitalWrite(10, HIGH);
+  delay(3000);
+  digitalWrite(10, LOW);
+  delay(250);
+}
+
+void dash()
+{
+  digitalWrite(4,HIGH);
+  delay(3000);
+  digitalWrite(4,LOW);
+  delay(250);
+}
+
+void dosh()
+{
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(3000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(500);
 }
