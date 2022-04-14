@@ -3,7 +3,6 @@
 #include <Adafruit_BMP280.h>
 #include <SPI.h>
 #include <SD.h>
-
 #include <Wire.h>
 
 Adafruit_BMP280 bmp;
@@ -15,15 +14,14 @@ int chip_select = 53;
 
 //define global variables
 File myFile;
-String fileName = "accelx3.csv";
+String fileName = "accelx4.csv";
 
 // !!!! change this on the flight day
 float local_pressure = 1022.0;
 unsigned long time;
-
 int falling_count;
-unsigned float current_alt;
-unsigned float previous_alt;
+//unsigned float current_alt;
+//unsigned float previous_alt;
 
 void setup() {
   // put your setup code here, to run once:
@@ -40,8 +38,8 @@ void setup() {
   Serial.println("-------------------");
 
   //Serial.println(F("BMP280 and MPU test"));
-  unsigned status1;
-  unsigned status2;
+  bool status1;
+  bool status2;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
   status1 = bmp.begin(0x76);
   status2 = mpu.begin(0x68);
@@ -75,7 +73,7 @@ void loop() {
     exit(0);
   }
   //Serial.print("Opened file, begin writing data...");
-  time = millis();
+  //time = millis();
   float accel_x;
   float altitude;
   int j = 0;
@@ -84,9 +82,10 @@ void loop() {
   while (j <= 2000) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-
+    
     accel_x = a.acceleration.x;
     altitude = bmp.readAltitude(local_pressure);
+    time = millis();
     myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
     j++;
     delay(10);
@@ -107,6 +106,8 @@ void loop() {
 //returns true if appogee has been detected
 //takes 100 consecutive measurements at 10ms per measurement results in
 //1 second of consistent falling to trigger appogee
+
+/*
 bool checkApogee() {
   if(current_alt < previous_alt){
     falling_count++;
@@ -118,7 +119,7 @@ bool checkApogee() {
   }
   
 }
-
+*/
 
 /*
   float local_pressure = 1015.24;
