@@ -21,6 +21,10 @@ String fileName = "accelx3.csv";
 float local_pressure = 1022.0;
 unsigned long time;
 
+int falling_count;
+unsigned float current_alt;
+unsigned float previous_alt;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -98,9 +102,7 @@ void loop() {
 
 }
 
-int falling_count;
-unsigned float current_alt;
-unsigned float previous_alt;
+
 
 //returns true if appogee has been detected
 //takes 100 consecutive measurements at 10ms per measurement results in
