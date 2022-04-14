@@ -16,6 +16,7 @@ float local_pressure = 1023.00;
 unsigned status1;
 
 void setup() {
+  pinMode(4,OUTPUT);
   Serial.begin(115200);
   // put your setup code here, to run once:
   Serial.print("beginning apogee detection test");
@@ -31,6 +32,7 @@ void setup() {
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_1); /* Standby time. */
 
+  
 }
 
 
@@ -56,5 +58,7 @@ void apogeeCheck(){
   }
   if(falling_count == 3){
     Serial.println("appogee_reached");
+    digitalWrite(4,HIGH);
+    
   }
 }
