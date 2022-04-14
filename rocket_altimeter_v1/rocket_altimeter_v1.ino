@@ -94,9 +94,30 @@ void loop() {
   delay(1000);
   exit(0);
 
-  // put your main code here, to run repeatedly:
+  
 
 }
+
+int falling_count;
+unsigned float current_alt;
+unsigned float previous_alt;
+
+//returns true if appogee has been detected
+//takes 100 consecutive measurements at 10ms per measurement results in
+//1 second of consistent falling to trigger appogee
+bool checkApogee() {
+  if(current_alt < previous_alt){
+    falling_count++;
+  } else {
+    falling_count = 0;
+  }
+  if(falling_count == 100){
+    return true
+  }
+  
+}
+
+
 /*
   float local_pressure = 1015.24;
   Serial.print(F("Temperature = "));
