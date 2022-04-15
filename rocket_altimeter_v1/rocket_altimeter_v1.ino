@@ -14,7 +14,7 @@ int chip_select = 53;
 
 //define global variables
 File myFile;
-String fileName = "accelx4.csv";
+String fileName = "accelx5.csv";
 
 // !!!! change this on the flight day
 float local_pressure = 1022.0;
@@ -86,7 +86,8 @@ void loop() {
     accel_x = a.acceleration.x;
     altitude = bmp.readAltitude(local_pressure);
     time = millis();
-    myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
+    writeSD(time,altitude,accel_x);
+    //myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
     j++;
     delay(10);
   }
@@ -162,9 +163,9 @@ bool checkApogee() {
 
 
 
-/*
-  void writeSD(float altitude, long t, float acceleration_x) {
-    dataFile = SD.open(fileName, FILE_WRITE);
-    dataFile.println((String)altitude + "," + (String)t + "," + (String)acceleration_x));
+
+  void writeSD(unsigned long t, float alt_meas, float accelx) {
+    myFile = SD.open(fileName, FILE_WRITE);
+    myFile.println((String)t + "," + (String)alt_meas + "," + (String)accelx);
+    myFile.close();
   }
-*/

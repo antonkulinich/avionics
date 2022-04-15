@@ -179,7 +179,7 @@ void apogeeCheck() {
   }
   if (falling_count == 1) {
     Serial.println(F("appogee_reached"));
-dosh();
+  dosh();
   }
 }
 
@@ -229,7 +229,7 @@ void pyroignition() {
   int safedist = 500*(1/3.281);
   int safealt = ref_alt + safedist;
   
-  if (current_alt > safealt && falling_count >= 1 && safealt < 300) {
+  if (current_alt > safealt && falling_count >= 1 && current_alt < 300) {
     Serial.print(F("2nd deployment alt:"));
     Serial.print(current_alt);
 dot();
