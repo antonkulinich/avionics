@@ -76,6 +76,11 @@ int ref_alt;
 File myFile;
 String fileName = "accelx4.csv";
 unsigned long time;
+boolean pyroArmed = false;
+boolean apogeeFire = false;
+
+int safedist = 500 * (1 / 3.281);
+int safealt = ref_alt + safedist;
 
 
 /////////////////////////////////////////////
@@ -164,15 +169,6 @@ void setup() {
   Serial.print(ref_alt);
   Serial.println(F("\nSafety Altitude:"));
   Serial.print(safealt);
-}
-
-/////////////////////////////////////////////
-// Repeated Functions placed here          //
-/////////////////////////////////////////////
-
-
-
-void loop() {
 
   myFile = SD.open(fileName, FILE_WRITE);
   if (myFile) {
@@ -181,33 +177,33 @@ void loop() {
     Serial.print(F("error opening file"));
     exit(0);
   }
+}//
+// Repeated Functions placed here          //
+////////////////////////////////////////
 
-  //time = millis();
-  float accel_x;
-  float altitude;
-  int j = 0;
+////////////////////////////////////////////////
+
+
+float accel_x;
+float altitude;
+
+void loop() {
+
+  
   //condition in while statement will have to do with the rocket flying, the while loop will exit when the rocket has confirmed landed
   //write functions for different stages of flight, let them return BOOLEAN
-  while (j <= 2000) {
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    accel_x = a.acceleration.x;
-    altitude = bmp.readAltitude(local_pressure);
-    time = millis();
-    myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
-    j++;
-    delay(10);
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  accel_x = a.acceleration.x;
+  altitude = bmp.readAltitude(local_pressure);
+  time = millis();
+  writeData();
+  if(pyroArmed){
+    apogeeCheck();
+  } else {
+    //wait until saftey conditions are met
+    //once they are met, then change pyroArmed to be true
   }
-  myFile.close();
-  Serial.print("-------------");
-  Serial.print("file written and closed");
-  delay(1000);
-  exit(0);
-
-  current_alt = bmp.readAltitude(local_pressure);
-  // Serial.println(current_alt);
-  apogeeCheck();
   previous_alt = current_alt;
   delay(100);
 }
@@ -218,6 +214,9 @@ void loop() {
 // Determining when rocket is at apogee    //
 /////////////////////////////////////////////
 
+void writeData(){
+  myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
+}
 
 
 void apogeeCheck() {
@@ -229,8 +228,9 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
-  if (falling_count == 1) {
+  if (falling_count == 3) {
     Serial.println(F("appogee_reached"));
+    apogeeIgnition();
     dosh();
   }
 }
@@ -256,17 +256,17 @@ void poweronblink() {
 
 
 void apogeeignition() {
-  int safedist = 500 * (1 / 3.281);
-  int safealt = ref_alt + safedist;
-
-  if (current_alt > safealt && falling_count >= 1) {
-    Serial.print(F("Apogee deployment alt:"));
-    Serial.print(current_alt);
-    dash();
-    dash();
-    dash();
-
+  if(!apogeeFire){
+    apogeeFire = true;
+    apogeeFireTime = time; //Set time apogee charge was fired
+    digitalWrite(apogeePin, HIGH); //Fire apogee charge
+  }else{
+    //After 3 seconds stop apogee charge
+    if(apogeeFireTime + 3000 < time){
+        digitalWrite(apogeePin, LOW); 
+    }
   }
+  
 }
 
 
@@ -276,10 +276,8 @@ void apogeeignition() {
 /////////////////////////////////////////////
 
 
-void pyroignition() {
-  int safedist = 500 * (1 / 3.281);
-  int safealt = ref_alt + safedist;
-
+void mainIgnition() {
+  
   if (current_alt > safealt && falling_count >= 1 && current_alt < 300) {
     Serial.print(F("2nd deployment alt:"));
     Serial.print(current_alt);
