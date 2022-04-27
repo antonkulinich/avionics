@@ -76,12 +76,13 @@ int ref_alt;
 File myFile;
 String fileName = "accelx4.csv";
 unsigned long time;
+float apogeeFireTime;
 boolean pyroArmed = false;
 boolean apogeeFire = false;
 
-//int safedist = 500 * (1 / 3.281);
-int safedist = 12;
-int safealt = safedist;
+int safedist = 50 * (1 / 3.281);
+//int safedist = ;
+int safealt = ref_alt + safedist;
 //int armdist = 300 * (1 / 3.281);
 int armdist = 128;
 int armalt = ref_alt + armdist;
@@ -173,6 +174,9 @@ void setup() {
     Serial.print(F("error opening file"));
   }
 }
+
+
+
 //
 // Repeated Functions placed here          //
 ////////////////////////////////////////
@@ -181,7 +185,7 @@ void setup() {
 
 
 float accel_x;
-float altitude;
+int altitude;
 
 void loop() {
 
@@ -204,11 +208,11 @@ void loop() {
     //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
     if(altitude > safealt){
     pyroArmed = true;
-    Serial.print(pyroArmed);
+    Serial.println("pyroArmed");
     }
   }
   previous_alt = altitude;
-  delay(100);
+  //delay(100);
 }
 
 
@@ -220,7 +224,7 @@ void loop() {
 //asdfasdf
 
 void writeData(){
-  myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
+  myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude + "," + (String)pyroArmed + "," + (String)apogeeFire + "," + String(apogeeFireTime));
 }
 
 
@@ -233,14 +237,11 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
-<<<<<<< HEAD
+
   if (falling_count == 2) {
-=======
-  if (falling_count == 1) { //if we detect that the previous altitude has decreased specified amount of times in a row, call apogee ignition
->>>>>>> 27b85fda6906340e3b57e32dc50096fefca13783
     Serial.println(F("appogee_reached"));
     apogeeignition();
-    dosh();
+    //dosh();
   }
 }
 
@@ -265,15 +266,16 @@ void poweronblink() {
 
 
 void apogeeignition() {
-  float apogeeFireTime;
   if(!apogeeFire){
     apogeeFire = true;
     apogeeFireTime = time; //Set time apogee charge was fired
     digitalWrite(4, HIGH); //Fire apogee charge
+    //writeData();
   }else{
     //After 3 seconds stop apogee charge
     if(apogeeFireTime + 3000 < time){
-        digitalWrite(4, LOW); 
+        digitalWrite(4, LOW);
+        //writeData(); 
     }
   }
   
