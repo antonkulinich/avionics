@@ -207,15 +207,12 @@ void loop() {
   myFile.close();
   Serial.print("-------------");
   Serial.print("file written and closed");
-  delay(1000);
-  //exit(0);
-
+ 
   current_alt = bmp.readAltitude(local_pressure);
   Serial.print(altitude);
   // Serial.println(current_alt);
   apogeeCheck();
   previous_alt = current_alt;
-  delay(100);
 }
 
 
