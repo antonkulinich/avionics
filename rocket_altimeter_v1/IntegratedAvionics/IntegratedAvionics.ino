@@ -91,7 +91,7 @@ int safealt = ref_alt + safedist;
 
 void setup() {
   //unsigned status1;
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(4, OUTPUT);
   pinMode(10, OUTPUT);
   poweronblink();
@@ -152,7 +152,7 @@ void setup() {
     current_alt = bmp.readAltitude(local_pressure);
   }
   sum = sum / 100;
-  ref_alt = sum;
+  ref_alt = sum; //stored altitude at launch pad, used as a reference point
 
 
 
@@ -197,9 +197,10 @@ void loop() {
     //wait until saftey conditions are met
     //once they are met, then change pyroArmed to be true
     //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
-    
+    if(altitude > safealt)
+    pyroArmed = true
   }
-  previous_alt = current_alt;
+  previous_alt = altitude;
   delay(100);
 }
 
