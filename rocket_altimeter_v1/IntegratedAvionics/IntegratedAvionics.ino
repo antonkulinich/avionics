@@ -69,23 +69,25 @@ Adafruit_MPU6050 mpu;
 int chip_select = 8; //change this as necessary based on wiring
 int falling_count;
 float current_alt;
-float previous_alt;                         /////////////////////////////////////
+int previous_alt;                         /////////////////////////////////////
 //////////////////////////////////////////// ADJUST LOCAL PRESSURE LAUNCH DAY//
 int local_pressure = 1023.00;             /////////////////////////////////////
 int ref_alt;
 File myFile;
-String fileName = "accelx4.csv";
+String fileName = "cartest2.csv";
 unsigned long time;
 float apogeeFireTime;
 boolean pyroArmed = false;
 boolean apogeeFire = false;
-
+int safealt;
 int safedist = 50 * (1 / 3.281);
 //int safedist = ;
-int safealt = ref_alt + safedist;
+
 //int armdist = 300 * (1 / 3.281);
 int armdist = 128;
 int armalt = ref_alt + armdist;
+
+
 
 /////////////////////////////////////////////
 // Single-Run & setup                      //
@@ -148,7 +150,6 @@ void setup() {
   /////////////////////////////////////////////
   // Determine reference altitude            //
   /////////////////////////////////////////////
-
   int sum;
   for (byte i = 0; i < 100; i++)
   {
@@ -157,6 +158,7 @@ void setup() {
   }
   sum = sum / 100;
   ref_alt = sum; //stored altitude at launch pad, used as a reference point
+  safealt = ref_alt + safedist;
 
 
 
@@ -198,6 +200,7 @@ void loop() {
   altitude = bmp.readAltitude(local_pressure);
   time = millis();
   writeData();
+  myFile.close();
   Serial.println(altitude);
   if(pyroArmed){
     Serial.println("PyroArmed");
@@ -238,7 +241,7 @@ void apogeeCheck() {
     //   Serial.println("altitude climbing...");
   }
 
-  if (falling_count == 2) {
+  if (falling_count == 1) {
     Serial.println(F("appogee_reached"));
     apogeeignition();
     //dosh();
