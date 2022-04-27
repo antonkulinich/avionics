@@ -68,8 +68,8 @@ Adafruit_MPU6050 mpu;
 
 int chip_select = 8; //change this as necessary based on wiring
 int falling_count;
-int current_alt;
-int previous_alt;                         /////////////////////////////////////
+float current_alt;
+float previous_alt;                         /////////////////////////////////////
 //////////////////////////////////////////// ADJUST LOCAL PRESSURE LAUNCH DAY//
 int local_pressure = 1023.00;             /////////////////////////////////////
 int ref_alt;
@@ -79,9 +79,12 @@ unsigned long time;
 boolean pyroArmed = false;
 boolean apogeeFire = false;
 
-int safedist = 500 * (1 / 3.281);
-int safealt = ref_alt + safedist;
-
+//int safedist = 500 * (1 / 3.281);
+int safedist = 12;
+int safealt = safedist;
+//int armdist = 300 * (1 / 3.281);
+int armdist = 128;
+int armalt = ref_alt + armdist;
 
 /////////////////////////////////////////////
 // Single-Run & setup                      //
@@ -168,9 +171,9 @@ void setup() {
     Serial.print(F("Opened file, begin writing data..."));
   } else {
     Serial.print(F("error opening file"));
-    exit(0);
   }
-}//
+}
+//
 // Repeated Functions placed here          //
 ////////////////////////////////////////
 
@@ -191,7 +194,9 @@ void loop() {
   altitude = bmp.readAltitude(local_pressure);
   time = millis();
   writeData();
+  Serial.println(altitude);
   if(pyroArmed){
+    Serial.println("PyroArmed");
     apogeeCheck();
   } else {
     //wait until saftey conditions are met
@@ -199,6 +204,7 @@ void loop() {
     //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
     if(altitude > safealt){
     pyroArmed = true;
+    Serial.print(pyroArmed);
     }
   }
   previous_alt = altitude;
@@ -219,7 +225,7 @@ void writeData(){
 
 
 void apogeeCheck() {
-  if (current_alt < previous_alt) {
+  if (altitude < previous_alt) {
     falling_count++;
     //Serial.print("lower altitude detected");
     //Serial.print("\n");
@@ -227,9 +233,9 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
-  if (falling_count == 3) {
+  if (falling_count == 2) {
     Serial.println(F("appogee_reached"));
-    apogeeIgnition();
+    apogeeignition();
     dosh();
   }
 }
@@ -255,14 +261,15 @@ void poweronblink() {
 
 
 void apogeeignition() {
+  float apogeeFireTime;
   if(!apogeeFire){
     apogeeFire = true;
     apogeeFireTime = time; //Set time apogee charge was fired
-    digitalWrite(apogeePin, HIGH); //Fire apogee charge
+    digitalWrite(4, HIGH); //Fire apogee charge
   }else{
     //After 3 seconds stop apogee charge
     if(apogeeFireTime + 3000 < time){
-        digitalWrite(apogeePin, LOW); 
+        digitalWrite(4, LOW); 
     }
   }
   
@@ -280,8 +287,6 @@ void mainIgnition() {
   if (current_alt > safealt && falling_count >= 1 && current_alt < 300) {
     Serial.print(F("2nd deployment alt:"));
     Serial.print(current_alt);
-    dot();
-    dot();
     dot();
   }
 }
