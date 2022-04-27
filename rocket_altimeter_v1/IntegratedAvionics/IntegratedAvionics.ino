@@ -197,8 +197,9 @@ void loop() {
     //wait until saftey conditions are met
     //once they are met, then change pyroArmed to be true
     //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
-    if(altitude > safealt)
-    pyroArmed = true
+    if(altitude > safealt){
+    pyroArmed = true;
+    }
   }
   previous_alt = altitude;
   delay(100);
