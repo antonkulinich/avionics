@@ -66,7 +66,7 @@ Adafruit_MPU6050 mpu;
 /////////////////////////////////////////////
 
 
-int chip_select = 8;
+int chip_select = 8; //change this as necessary based on wiring
 int falling_count;
 int current_alt;
 int previous_alt;                         /////////////////////////////////////
