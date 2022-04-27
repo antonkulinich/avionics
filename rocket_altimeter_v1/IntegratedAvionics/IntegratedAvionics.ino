@@ -219,7 +219,7 @@ void writeData(){
 
 
 void apogeeCheck() {
-  if (current_alt < previous_alt) {
+  if (altitude < previous_alt) {
     falling_count++;
     //Serial.print("lower altitude detected");
     //Serial.print("\n");
@@ -227,7 +227,7 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
-  if (falling_count == 3) {
+  if (falling_count == 1) { //if we detect that the previous altitude has decreased specified amount of times in a row, call apogee ignition
     Serial.println(F("appogee_reached"));
     apogeeIgnition();
     dosh();
