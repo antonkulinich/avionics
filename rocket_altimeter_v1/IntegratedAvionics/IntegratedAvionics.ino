@@ -233,7 +233,11 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
+<<<<<<< HEAD
   if (falling_count == 2) {
+=======
+  if (falling_count == 1) { //if we detect that the previous altitude has decreased specified amount of times in a row, call apogee ignition
+>>>>>>> 27b85fda6906340e3b57e32dc50096fefca13783
     Serial.println(F("appogee_reached"));
     apogeeignition();
     dosh();
