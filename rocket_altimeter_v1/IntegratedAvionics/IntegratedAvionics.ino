@@ -156,14 +156,7 @@ void setup() {
 
 
 
-  /////////////////////////////////////////////
-  // Determine safety altitude from current  //
-  /////////////////////////////////////////////
 
-
-
-  int safedist = 500 * (1 / 3.281);
-  int safealt = ref_alt + safedist;
 
   Serial.println(F("\nReference Altitude Completed:"));
   Serial.print(ref_alt);
@@ -203,6 +196,8 @@ void loop() {
   } else {
     //wait until saftey conditions are met
     //once they are met, then change pyroArmed to be true
+    //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
+    
   }
   previous_alt = current_alt;
   delay(100);
@@ -213,6 +208,8 @@ void loop() {
 /////////////////////////////////////////////
 // Determining when rocket is at apogee    //
 /////////////////////////////////////////////
+
+//asdfasdf
 
 void writeData(){
   myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
