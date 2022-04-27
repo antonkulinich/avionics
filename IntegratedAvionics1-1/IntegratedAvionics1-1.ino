@@ -81,7 +81,7 @@ bool MarkApge = false;
 int safedist = 128;
 int safealt = ref_alt + safedist;
 //int armdist = 300 * (1 / 3.281);
-int armdist = 129;
+int armdist = 128;
 int armalt = ref_alt + armdist;
 
 
@@ -267,17 +267,17 @@ void poweronblink() {
 
 
 
-//void apogeeignition() {
+void apogeeignition() {
   
-//  if (current_alt > safealt && falling_count >= 1) {
-//    Serial.print(F("Apogee deployment alt:"));
-//    Serial.print(current_alt);
-//    dash();
-//    dash();
-//    dash();
+  if (current_alt > safealt && falling_count >= 1) {
+    Serial.print(F("Apogee deployment alt:"));
+    Serial.print(current_alt);
+    dash();
+    dash();
+    dash();
 
-//  }
-//}
+  }
+}
 
 
 

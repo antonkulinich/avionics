@@ -68,19 +68,25 @@ Adafruit_MPU6050 mpu;
 
 int chip_select = 8; //change this as necessary based on wiring
 int falling_count;
-int current_alt;
+float current_alt;
 int previous_alt;                         /////////////////////////////////////
 //////////////////////////////////////////// ADJUST LOCAL PRESSURE LAUNCH DAY//
 int local_pressure = 1023.00;             /////////////////////////////////////
 int ref_alt;
 File myFile;
-String fileName = "accelx4.csv";
+String fileName = "cartest2.csv";
 unsigned long time;
+float apogeeFireTime;
 boolean pyroArmed = false;
 boolean apogeeFire = false;
+int safealt;
+int safedist = 50 * (1 / 3.281);
+//int safedist = ;
 
-int safedist = 500 * (1 / 3.281);
-int safealt = ref_alt + safedist;
+//int armdist = 300 * (1 / 3.281);
+int armdist = 128;
+int armalt = ref_alt + armdist;
+
 
 
 /////////////////////////////////////////////
@@ -91,7 +97,7 @@ int safealt = ref_alt + safedist;
 
 void setup() {
   //unsigned status1;
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
   pinMode(4, OUTPUT);
   pinMode(10, OUTPUT);
   poweronblink();
@@ -144,7 +150,6 @@ void setup() {
   /////////////////////////////////////////////
   // Determine reference altitude            //
   /////////////////////////////////////////////
-
   int sum;
   for (byte i = 0; i < 100; i++)
   {
@@ -152,7 +157,8 @@ void setup() {
     current_alt = bmp.readAltitude(local_pressure);
   }
   sum = sum / 100;
-  ref_alt = sum;
+  ref_alt = sum; //stored altitude at launch pad, used as a reference point
+  safealt = ref_alt + safedist;
 
 
 
@@ -168,9 +174,12 @@ void setup() {
     Serial.print(F("Opened file, begin writing data..."));
   } else {
     Serial.print(F("error opening file"));
-    exit(0);
   }
-}//
+}
+
+
+
+//
 // Repeated Functions placed here          //
 ////////////////////////////////////////
 
@@ -178,7 +187,7 @@ void setup() {
 
 
 float accel_x;
-float altitude;
+int altitude;
 
 void loop() {
 
@@ -191,16 +200,22 @@ void loop() {
   altitude = bmp.readAltitude(local_pressure);
   time = millis();
   writeData();
+  myFile.close();
+  Serial.println(altitude);
   if(pyroArmed){
+    Serial.println("PyroArmed");
     apogeeCheck();
   } else {
     //wait until saftey conditions are met
     //once they are met, then change pyroArmed to be true
     //add logic to wait until saftey conditions met --> then change the value of pyroArmed to true
-    
+    if(altitude > safealt){
+    pyroArmed = true;
+    Serial.println("pyroArmed");
+    }
   }
-  previous_alt = current_alt;
-  delay(100);
+  previous_alt = altitude;
+  //delay(100);
 }
 
 
@@ -212,12 +227,12 @@ void loop() {
 //asdfasdf
 
 void writeData(){
-  myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude);
+  myFile.println((String)time + "," + (String)accel_x + "," + (String)altitude + "," + (String)pyroArmed + "," + (String)apogeeFire + "," + String(apogeeFireTime));
 }
 
 
 void apogeeCheck() {
-  if (current_alt < previous_alt) {
+  if (altitude < previous_alt) {
     falling_count++;
     //Serial.print("lower altitude detected");
     //Serial.print("\n");
@@ -225,10 +240,11 @@ void apogeeCheck() {
     falling_count = 0;
     //   Serial.println("altitude climbing...");
   }
-  if (falling_count == 3) {
+
+  if (falling_count == 1) {
     Serial.println(F("appogee_reached"));
-    apogeeIgnition();
-    dosh();
+    apogeeignition();
+    //dosh();
   }
 }
 
@@ -256,11 +272,13 @@ void apogeeignition() {
   if(!apogeeFire){
     apogeeFire = true;
     apogeeFireTime = time; //Set time apogee charge was fired
-    digitalWrite(apogeePin, HIGH); //Fire apogee charge
+    digitalWrite(4, HIGH); //Fire apogee charge
+    //writeData();
   }else{
     //After 3 seconds stop apogee charge
     if(apogeeFireTime + 3000 < time){
-        digitalWrite(apogeePin, LOW); 
+        digitalWrite(4, LOW);
+        //writeData(); 
     }
   }
   
@@ -278,8 +296,6 @@ void mainIgnition() {
   if (current_alt > safealt && falling_count >= 1 && current_alt < 300) {
     Serial.print(F("2nd deployment alt:"));
     Serial.print(current_alt);
-    dot();
-    dot();
     dot();
   }
 }
